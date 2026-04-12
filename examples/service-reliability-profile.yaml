@@ -1,0 +1,18 @@
+apiVersion: reliability.platform/v1alpha1
+kind: ServiceReliabilityProfile
+metadata:
+  name: checkout-api
+service:
+  application: checkout
+  name: checkout-api
+  criticality: tier-1
+ownership:
+  team: payments-platform
+  escalation: payments-platform-primary
+capabilities:
+  - checkout
+dependencies:
+  - payments-provider
+  - product-catalog
+readiness: gaps-accepted-with-action-items
+
