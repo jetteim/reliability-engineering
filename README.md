@@ -1,6 +1,6 @@
 # Reliability Engineering Skill
 
-Reusable agent-agnostic skill for building reliability models, service reliability profiles, incident/postmortem analysis, miss-policy, action items, and resilience experiments.
+Reusable agent-agnostic skill for building reliability models, service reliability profiles, incident/postmortem analysis, miss-policy, action items, and resilience experiments, including ambient failure patterns where bounded recurring disruption makes failure handling routine.
 
 The skill is meant to work with the private model repo when present. The preferred checkout is the source mirror created by the workstation installer:
 
