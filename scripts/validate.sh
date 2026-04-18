@@ -5,8 +5,12 @@ test -f skill/reliability-engineering/SKILL.md
 test -f skill/reliability-engineering/references/reliability-model-summary.md
 test -f references/reliability-model-summary.md
 test -f examples/service-reliability-profile.yaml
+test -f tests/scenarios/checkout-reliability.prompt.md
+test -f tests/scenarios/checkout-reliability.expected.yaml
+test -f tests/scenarios/checkout-reliability.actual.yaml
+test -x scripts/run-exercise.sh
 
-ruby -e 'require "yaml"; YAML.load_file("skill/reliability-engineering/SKILL.md"); YAML.load_file("examples/service-reliability-profile.yaml"); puts "yaml parses"'
+ruby -e 'require "yaml"; YAML.load_file("skill/reliability-engineering/SKILL.md"); YAML.load_file("examples/service-reliability-profile.yaml"); YAML.load_file("tests/scenarios/checkout-reliability.expected.yaml"); YAML.load_file("tests/scenarios/checkout-reliability.actual.yaml"); puts "yaml parses"'
 cmp -s references/reliability-model-summary.md skill/reliability-engineering/references/reliability-model-summary.md
 
 grep -q '^name: reliability-engineering$' skill/reliability-engineering/SKILL.md
@@ -31,5 +35,8 @@ grep -q 'Generate candidate SLIs and SLOs from telemetry' references/reliability
 grep -q 'Incident To Learning Pattern' references/reliability-model-summary.md
 grep -q 'Ambient Resilience Experiment Pattern' references/reliability-model-summary.md
 grep -q 'jitter' references/reliability-model-summary.md
+grep -q 'ProviderGenerationHandoff' tests/scenarios/checkout-reliability.expected.yaml
+
+./scripts/run-exercise.sh
 
 echo "validation ok"

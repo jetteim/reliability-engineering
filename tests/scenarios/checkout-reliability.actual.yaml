@@ -1,0 +1,115 @@
+artifacts:
+  ServiceReliabilityProfile:
+    service: checkout-api
+    purpose: Reduce failed checkouts and shorten reliability learning loops.
+    reliability_boundary: user-checkout
+    critical_user_journeys:
+      - submit-cart-to-paid-order
+    dependencies:
+      - payment-provider
+      - inventory-service
+    known_failure_modes:
+      - payment-provider failure
+      - inventory timeout
+      - malformed cart payload
+    operating_assumptions:
+      failure_is_normal: true
+      ambient_failure: bounded recurring experiments only
+
+  SliSloDefinition:
+    slis:
+      checkout_success_ratio:
+        type: ratio
+        good_events: paid orders
+        total_events: checkout attempts
+        exclusions:
+          - known fraud block
+          - customer abandoned before payment authorization
+      checkout_latency:
+        type: latency
+        threshold: 2s
+        measurement: cart submission to paid order acknowledgement
+    slo:
+      objective: 99.5% successful checkout attempts over 28d
+      window: 28d
+      budget_policy: freeze risky checkout changes when budget is exhausted
+    miss_policy:
+      trigger: error budget exhausted or projected exhaustion before window end
+      actions:
+        - pause risky checkout deploys
+        - run reliability review before feature expansion
+
+  ReliabilityRecommendationSet:
+    recommendations:
+      - define checkout success SLI from objective ratios
+      - add dependency-failure runbook and ownership
+      - hand off missing telemetry to observability-engineering
+    telemetry_gaps:
+      - payment-provider error classification
+      - inventory timeout reason
+      - cart payload validation outcome
+    ownership:
+      service: checkout-api
+      reliability_review: checkout service team
+
+  IncidentLearningPlan:
+    incident_inputs:
+      - deploy events
+      - on-call notes
+      - customer impact
+    outputs:
+      - postmortem
+      - action items
+      - reliability model update
+    review_questions:
+      - Which journey step failed?
+      - Which dependency or release event changed?
+      - Which action item changes future detection, mitigation, or prevention?
+
+  ResilienceExperimentPlan:
+    experiments:
+      payment_provider_error_injection:
+        failure: bounded payment-provider errors
+        expected_system_behavior: checkout degrades with clear user outcome and no duplicate charges
+        safeguards:
+          - production blast radius limit
+          - rollback switch
+      inventory_timeout_jitter:
+        failure: bounded timeout and jitter
+        expected_system_behavior: checkout preserves cart state and reports retry-safe failure
+        safeguards:
+          - abort when checkout_success_ratio drops below experiment guardrail
+          - exclude peak launch windows
+
+  ProviderGenerationHandoff:
+    skill: observability-engineering
+    provider_targets:
+      - datadog
+      - elastic
+    generated_outputs:
+      - terraform observability resources
+      - terraform SLO resources
+      - provider validation commands
+    rules:
+      reliability_model_is_source_intent: true
+      observability_engineering_generates_backend_artifacts: true
+    target: checkout-api reliability evidence to provider Terraform adapters
+    blast_radius: generated provider files only until Terraform plan is reviewed
+    rollback_path: revert generated provider commit and restore prior Terraform state if applied
+
+  VerificationEvidence:
+    target: checkout-api reliability packet
+    command: ./scripts/run-exercise.sh
+    output_path: tests/scenarios/checkout-reliability.actual.yaml
+    metric_names:
+      - checkout_success_ratio
+      - checkout_latency
+      - error_budget_burn_rate
+    log_names:
+      - checkout.dependency_error
+      - checkout.validation_failed
+    trace_names:
+      - checkout.request
+      - payment.authorize
+      - inventory.reserve
+    rollback_path: revert this repository commit and reinstall the previous skill copy

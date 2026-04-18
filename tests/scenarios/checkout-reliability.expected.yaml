@@ -1,0 +1,76 @@
+source_prompt: tests/scenarios/checkout-reliability.prompt.md
+expected_artifacts:
+  - ServiceReliabilityProfile
+  - SliSloDefinition
+  - ReliabilityRecommendationSet
+  - IncidentLearningPlan
+  - ResilienceExperimentPlan
+  - ProviderGenerationHandoff
+  - VerificationEvidence
+required_contents:
+  ServiceReliabilityProfile:
+    service: checkout-api
+    reliability_boundary: user-checkout
+    critical_user_journeys:
+      - submit-cart-to-paid-order
+    dependencies:
+      - payment-provider
+      - inventory-service
+    known_failure_modes:
+      - payment-provider failure
+      - inventory timeout
+      - malformed cart payload
+  SliSloDefinition:
+    slis:
+      checkout_success_ratio:
+        good_events: paid orders
+        total_events: checkout attempts
+      checkout_latency:
+        threshold: 2s
+    slo:
+      objective: 99.5% successful checkout attempts over 28d
+    miss_policy:
+      trigger: error budget exhausted or projected exhaustion before window end
+      actions:
+        - pause risky checkout deploys
+        - run reliability review before feature expansion
+  ReliabilityRecommendationSet:
+    recommendations:
+      - define checkout success SLI from objective ratios
+      - add dependency-failure runbook and ownership
+      - hand off missing telemetry to observability-engineering
+  IncidentLearningPlan:
+    incident_inputs:
+      - deploy events
+      - on-call notes
+      - customer impact
+    outputs:
+      - postmortem
+      - action items
+      - reliability model update
+  ResilienceExperimentPlan:
+    experiments:
+      payment_provider_error_injection:
+        failure: bounded payment-provider errors
+        safeguards:
+          - production blast radius limit
+          - rollback switch
+      inventory_timeout_jitter:
+        failure: bounded timeout and jitter
+  ProviderGenerationHandoff:
+    skill: observability-engineering
+    provider_targets:
+      - datadog
+      - elastic
+    generated_outputs:
+      - terraform observability resources
+      - terraform SLO resources
+      - provider validation commands
+    rules:
+      reliability_model_is_source_intent: true
+      observability_engineering_generates_backend_artifacts: true
+  VerificationEvidence:
+    target: checkout-api reliability packet
+    command: ./scripts/run-exercise.sh
+    output_path: tests/scenarios/checkout-reliability.actual.yaml
+    rollback_path: revert this repository commit and reinstall the previous skill copy
