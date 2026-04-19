@@ -59,6 +59,11 @@ required_contents:
         failure: bounded timeout and jitter
   ProviderGenerationHandoff:
     skill: observability-engineering
+    contract: ReliabilityProviderHandoff
+    source_reliability_artifacts:
+      - SliSloDefinition
+      - ReliabilityRecommendationSet
+      - ResilienceExperimentPlan
     provider_targets:
       - datadog
       - elastic
@@ -66,9 +71,24 @@ required_contents:
       - terraform observability resources
       - terraform SLO resources
       - provider validation commands
+    owned_by_reliability:
+      - SLI semantics
+      - SLO objective and window
+      - error-budget and miss-policy intent
+      - resilience experiment evidence needs
+    delegated_to_observability:
+      - Terraform resource mapping
+      - provider query syntax
+      - dashboards and monitor bindings
+      - provider validation commands
     rules:
       reliability_model_is_source_intent: true
       observability_engineering_generates_backend_artifacts: true
+      reliability_engineering_does_not_generate_provider_terraform: true
+      unsupported_provider_capabilities_are_reported_as_gaps: true
+    safety:
+      blast_radius: generated provider files only until Terraform plan is reviewed
+      rollback_path: revert generated provider commit and restore prior Terraform state if applied
   VerificationEvidence:
     target: checkout-api reliability packet
     command: ./scripts/run-exercise.sh

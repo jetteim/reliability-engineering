@@ -10,6 +10,7 @@ Context:
 - The current team has no explicit SLO, miss policy, or resilience experiment plan.
 - Payment-provider failure, inventory timeout, and malformed cart payloads are credible failure modes.
 - Recommendations must avoid duplicating the observability model; ask for telemetry evidence and hand off observability gaps to `$observability-engineering`.
+- The team wants future Datadog and Elastic Terraform generation, but reliability must only produce a provider handoff contract and must not generate provider Terraform directly.
 - Include rollback path and verification evidence for any proposed operational change.
 
 Produce these artifacts:
@@ -19,4 +20,5 @@ Produce these artifacts:
 - `ReliabilityRecommendationSet`
 - `IncidentLearningPlan`
 - `ResilienceExperimentPlan`
+- `ProviderGenerationHandoff`
 - `VerificationEvidence`

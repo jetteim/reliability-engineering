@@ -3,6 +3,7 @@ set -euo pipefail
 
 test -f skill/reliability-engineering/SKILL.md
 test -f skill/reliability-engineering/references/reliability-model-summary.md
+test -f skill/reliability-engineering/references/provider-handoff.md
 test -f references/reliability-model-summary.md
 test -f examples/service-reliability-profile.yaml
 test -f tests/scenarios/checkout-reliability.prompt.md
@@ -36,6 +37,9 @@ grep -q 'Incident To Learning Pattern' references/reliability-model-summary.md
 grep -q 'Ambient Resilience Experiment Pattern' references/reliability-model-summary.md
 grep -q 'jitter' references/reliability-model-summary.md
 grep -q 'ProviderGenerationHandoff' tests/scenarios/checkout-reliability.expected.yaml
+grep -q 'ReliabilityProviderHandoff' skill/reliability-engineering/references/provider-handoff.md
+grep -q 'delegated_to_observability' skill/reliability-engineering/references/provider-handoff.md
+grep -q 'Do not generate provider Terraform from this skill' skill/reliability-engineering/references/provider-handoff.md
 
 ./scripts/run-exercise.sh
 

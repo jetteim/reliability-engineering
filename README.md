@@ -16,6 +16,8 @@ It also recognizes this legacy workspace checkout:
 
 It can still operate from its bundled reference when the private model is unavailable.
 
+Provider-specific Terraform is intentionally delegated. When Datadog, Elastic, or another backend provider is requested, reliability produces a neutral provider handoff contract from `skill/reliability-engineering/references/provider-handoff.md`; `observability-engineering` owns Terraform resource mapping and provider validation.
+
 ## Install With Private Model Fetch
 
 Copy `skill/reliability-engineering` into the skill directory used by your agent runtime. The install path below tries to fetch or clone the private model repo first. If the private repo is unavailable because auth or network access is missing, the skill still installs and falls back to `references/reliability-model-summary.md`.
