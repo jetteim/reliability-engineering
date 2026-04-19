@@ -5,6 +5,7 @@ expected_artifacts:
   - ReliabilityRecommendationSet
   - IncidentLearningPlan
   - ResilienceExperimentPlan
+  - SreRulesGenerationPlan
   - ProviderGenerationHandoff
   - VerificationEvidence
 required_contents:
@@ -57,6 +58,35 @@ required_contents:
           - rollback switch
       inventory_timeout_jitter:
         failure: bounded timeout and jitter
+  SreRulesGenerationPlan:
+    generator: sre-rules
+    engine: slo-rules-engine
+    source_definition: examples/services/checkout.rb
+    review_gate:
+      - bin/rules-ctl validate examples/services/checkout.rb
+      - bin/rules-ctl model-report examples/services/checkout.rb
+    provider_targets:
+      supported:
+        - datadog
+        - prometheus_stack
+        - sloth
+      unsupported:
+        - elastic
+    generation_commands:
+      - bin/rules-ctl generate --provider datadog examples/services/checkout.rb
+      - bin/rules-ctl generate --provider prometheus_stack examples/services/checkout.rb
+      - bin/rules-ctl generate --provider sloth examples/services/checkout.rb
+      - bin/rules-ctl generate-routes --integration notification_router examples/services/checkout.rb
+    generated_outputs:
+      - deterministic provider manifests
+      - SLO definitions
+      - burn-rate alert context
+      - missing-telemetry alerts
+      - dashboard manifests
+      - route catalog entries
+    gaps:
+      - Elastic provider generation requires a future sre-rules provider or observability-engineering handoff.
+      - Terraform generation remains delegated to observability-engineering.
   ProviderGenerationHandoff:
     skill: observability-engineering
     contract: ReliabilityProviderHandoff

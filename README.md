@@ -16,6 +16,14 @@ It also recognizes this legacy workspace checkout:
 
 It can still operate from its bundled reference when the private model is unavailable.
 
+Executable SLI/SLO, alert, route, and dashboard generation should come from the deterministic `sre-rules` engine in `slo-rules-engine` when the requested provider is supported:
+
+```text
+${AGENTS_HOME:-$HOME/.agents}/vendor_imports/repos/slo-rules-engine
+```
+
+Use `bin/rules-ctl validate`, `bin/rules-ctl model-report`, and `bin/rules-ctl generate --provider ...` as the generation path instead of hand-writing provider artifacts.
+
 Provider-specific Terraform is intentionally delegated. When Datadog, Elastic, or another backend provider is requested, reliability produces a neutral provider handoff contract from `skill/reliability-engineering/references/provider-handoff.md`; `observability-engineering` owns Terraform resource mapping and provider validation.
 
 ## Install With Private Model Fetch
@@ -26,6 +34,7 @@ Copy `skill/reliability-engineering` into the skill directory used by your agent
 SKILLS_DIR="${SKILLS_DIR:-${AGENTS_HOME:-$HOME/.agents}/skills}"
 MODEL_ROOT="${MODEL_ROOT:-${AGENTS_HOME:-$HOME/.agents}/vendor_imports/repos}"
 PLATFORM_RELIABILITY_MODEL_REPO="${PLATFORM_RELIABILITY_MODEL_REPO:-git@github.com:jetteim/platform-reliability-model.git}"
+SLO_RULES_ENGINE_REPO="${SLO_RULES_ENGINE_REPO:-git@github.com:jetteim/slo-rules-engine.git}"
 
 mkdir -p "$MODEL_ROOT"
 if [ -d "$MODEL_ROOT/platform-reliability-model/.git" ]; then
@@ -38,6 +47,16 @@ else
   fi
 fi
 
+if [ -d "$MODEL_ROOT/slo-rules-engine/.git" ]; then
+  if ! git -C "$MODEL_ROOT/slo-rules-engine" pull --ff-only; then
+    echo "sre-rules engine update failed; deterministic generation will need an existing checkout" >&2
+  fi
+else
+  if ! git clone "$SLO_RULES_ENGINE_REPO" "$MODEL_ROOT/slo-rules-engine"; then
+    echo "sre-rules engine clone failed; skill can still emit a generation gap" >&2
+  fi
+fi
+
 mkdir -p "$SKILLS_DIR/reliability-engineering"
 cp -R skill/reliability-engineering/. "$SKILLS_DIR/reliability-engineering/"
 ```
@@ -46,4 +65,5 @@ cp -R skill/reliability-engineering/. "$SKILLS_DIR/reliability-engineering/"
 
 ```bash
 ./scripts/validate.sh
+RELIABILITY_VALIDATE_SRE_RULES=1 ./scripts/validate.sh
 ```
